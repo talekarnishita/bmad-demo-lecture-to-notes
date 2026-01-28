@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dev — Demo</title>
+  <style>
+    :root {
+      --bg: #0f1114;
+      --surface: #161a1e;
+      --border: #2a2f36;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-dim: #388bfd66;
+      --success: #3fb950;
+      --error: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .container { max-width: 720px; margin: 0 auto; padding: 2rem 1.5rem; }
+    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; }
+    .zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      text-align: center;
+      background: var(--surface);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .zone.drag { border-color: var(--accent); background: var(--accent-dim); }
+    .zone input[type="file"] { display: none; }
+    .zone label {
+      cursor: pointer;
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .zone label:hover { opacity: 0.9; }
+    .zone p { margin: 0.5rem 0 0; color: var(--muted); font-size: 0.85rem; }
+    .status {
+      margin-top: 1.5rem;
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    .status.processing { color: var(--muted); }
+    .status.error { background: #f8514915; border-color: var(--error); color: var(--error); }
+    .status.success { border-color: var(--success); }
+    .result { margin-top: 2rem; }
+    .result h2 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; color: var(--muted); }
+    .result h2:first-child { margin-top: 0; }
+    .result .summary { white-space: pre-wrap; }
+    .result .section { margin-bottom: 1.25rem; }
+    .result .section h3 { font-size: 1rem; margin: 0 0 0.35rem; }
+    .result .section .content { color: var(--muted); font-size: 0.95rem; white-space: pre-wrap; }
+    .result .keyConcepts { list-style: none; padding: 0; margin: 0; }
+    .result .keyConcepts li { padding: 0.25rem 0; border-bottom: 1px solid var(--border); }
+    .result .keyConcepts li:last-child { border-bottom: none; }
+    .actions { margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .btn:hover { background: var(--border); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+    .btn.primary:hover { opacity: 0.9; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dev — Demo</h1>
+    <p class="sub">Upload a lecture (audio/video) → get structured notes. No sign‑up, nothing stored.</p>
+
+    <div class="zone" id="zone">
+      <input type="file" id="file" accept=".mp3,.mp4,.mpeg,.mpga,.m4a,.wav,.webm" />
+      <label for="file">Choose a file</label> or drag and drop
+      <p>MP3, MP4, M4A, WAV, WebM · max 25MB (Whisper limit)</p>
+    </div>
+
+    <div class="status hidden" id="status"></div>
+    <div class="result hidden" id="result"></div>
+    <div class="actions hidden" id="actions"></div>
+  </div>
+
+  <script>
+    const zone = document.getElementById("zone");
+    const fileInput = document.getElementById("file");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const actionsEl = document.getElementById("actions");
+
+    const showStatus = (msg, type = "processing") => {
+      statusEl.textContent = msg;
+      statusEl.className = "status " + type;
+      statusEl.classList.remove("hidden");
+      resultEl.classList.add("hidden");
+      actionsEl.classList.add("hidden");
+    };
+
+    const showError = (msg) => {
+      showStatus(msg, "error");
+    };
+
+    const showResult = (data) => {
+      statusEl.classList.add("hidden");
+      resultEl.classList.remove("hidden");
+      actionsEl.classList.remove("hidden");
+
+      let html = "";
+      if (data.summary) {
+        html += "<h2>Summary</h2><div class='summary'>" + escapeHtml(data.summary) + "</div>";
+      }
+      if (data.sections && data.sections.length) {
+        html += "<h2>Sections</h2>";
+        data.sections.forEach((s) => {
+          html += "<div class='section'><h3>" + escapeHtml(s.heading || "") + "</h3>";
+          html += "<div class='content'>" + escapeHtml(s.content || "") + "</div></div>";
+        });
+      }
+      if (data.keyConcepts && data.keyConcepts.length) {
+        html += "<h2>Key concepts</h2><ul class='keyConcepts'>";
+        data.keyConcepts.forEach((c) => {
+          const txt = typeof c === "string" ? c : (c.term ? (c.term + (c.definition ? " — " + c.definition : "")) : "");
+          html += "<li>" + escapeHtml(txt) + "</li>";
+        });
+        html += "</ul>";
+      }
+      resultEl.innerHTML = html;
+
+      actionsEl.innerHTML =
+        "<button class='btn primary' id='dlMd'>Download as Markdown</button>" +
+        "<button class='btn' id='copy'>Copy</button>" +
+        "<button class='btn' id='again'>Process another</button>";
+
+      const md = toMarkdown(data);
+      document.getElementById("dlMd").onclick = () => {
+        const a = document.createElement("a");
+        a.href = "data:text/markdown;charset=utf-8," + encodeURIComponent(md);
+        a.download = "dev-structured-notes.md";
+        a.click();
+      };
+      document.getElementById("copy").onclick = () => {
+        navigator.clipboard.writeText(md).then(() => { document.getElementById("copy").textContent = "Copied"; });
+      };
+      document.getElementById("again").onclick = () => {
+        fileInput.value = "";
+        resultEl.classList.add("hidden");
+        actionsEl.classList.add("hidden");
+        statusEl.classList.add("hidden");
+      };
+
+      window._lastStructured = data;
+      window._lastMarkdown = md;
+    };
+
+    function escapeHtml(s) {
+      const div = document.createElement("div");
+      div.textContent = s;
+      return div.innerHTML;
+    }
+
+    function toMarkdown(data) {
+      let md = "";
+      if (data.summary) md += "## Summary\n\n" + data.summary + "\n\n";
+      if (data.sections && data.sections.length) {
+        md += "## Sections\n\n";
+        data.sections.forEach((s) => {
+          md += "### " + (s.heading || "") + "\n\n" + (s.content || "") + "\n\n";
+        });
+      }
+      if (data.keyConcepts && data.keyConcepts.length) {
+        md += "## Key concepts\n\n";
+        data.keyConcepts.forEach((c) => {
+          const txt = typeof c === "string" ? c : (c.term ? (c.term + (c.definition ? " — " + c.definition : "")) : "");
+          md += "- " + txt + "\n";
+        });
+      }
+      return md.trim();
+    }
+
+    async function process(file) {
+      if (!file) return;
+      showStatus("Processing… transcribing then structuring.", "processing");
+      const fd = new FormData();
+      fd.append("file", file);
+
+      try {
+        const r = await fetch("/process", { method: "POST", body: fd });
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) {
+          showError(j.detail || r.statusText || "Request failed.");
+          return;
+        }
+        showResult(j);
+      } catch (e) {
+        showError(e.message || "Network error.");
+      }
+    }
+
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files[0];
+      if (f) process(f);
+    });
+
+    zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("drag"); });
+    zone.addEventListener("dragleave", () => zone.classList.remove("drag"));
+    zone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      zone.classList.remove("drag");
+      const f = e.dataTransfer.files[0];
+      if (f) process(f);
+    });
+  </script>
+</body>
+</html>
