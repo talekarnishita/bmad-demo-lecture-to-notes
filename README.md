@@ -6,30 +6,32 @@ Minimal web app to validate **output quality** (transcription → structured not
 
 ---
 
-## BMAD and this code
+## BMAD Planning Artifacts
 
-This demo was specified and built using **BMAD** (a product-development method: product brief → PRD → technical approach → implementation). Understanding that flow helps you see how the code matches the spec.
+This demo was built using **BMAD** (a product-development method that makes thinking and decisions explicit and reviewable). The planning artifacts below document *why* decisions were made, not just *what* was built.
 
-### How BMAD was used
+### Planning Documents
 
-1. **Product brief** — Defined Dev as a learning-structure engine for students: upload a lecture → get structured notes, summary, key concepts. Target: “review in minutes, not rewatching.”
-2. **PRD** — Captured success criteria, user journeys, and MVP scope (web app, upload → process → structured review).
-3. **Demo technical approach** — Chose a minimal path to validate output quality *before* full architecture: Option A (CLI), Option B (web app), Option C (notebook). **Option B** was chosen for real user testing.
-4. **This repo** — Implementation of Option B: one backend endpoint, one frontend page, no auth or DB.
+- **[PRODUCT_BRIEF.md](./PRODUCT_BRIEF.md)** — Problem, user, goal, and success criteria
+- **[PRD.md](./PRD.md)** — Scope, success criteria, constraints, and non-goals
+- **[TECHNICAL_APPROACH.md](./TECHNICAL_APPROACH.md)** — Architecture decisions and trade-offs
+- **[CODE_MAPPING.md](./CODE_MAPPING.md)** — How code implements the decisions above
 
-### How the code maps to the spec
+### Why These Matter
 
-| Spec (from BMAD) | Code |
-|------------------|------|
-| User uploads lecture (audio/video) | `static/index.html` — file input + drag-and-drop; `POST /process` in `app.py` |
-| Transcribe → structure (sections, summary, key concepts) | `app.py`: Whisper API → transcript, then GPT with `STRUCTURE_PROMPT` → JSON |
-| Output format: sections, summary, keyConcepts | Same shape in `app.py` response and in the UI render in `static/index.html` |
-| No auth, no DB, stateless | No sessions or storage; temp file deleted after request |
-| Demo-only hosting | Run locally or expose via ngrok (see below) |
+BMAD isn't just about building code—it's about making the **reasoning** visible:
+- **Product Brief** explains the problem and why this solution matters
+- **PRD** defines what's in scope and what's explicitly deferred
+- **Technical Approach** documents why Option B (web app) was chosen over CLI or notebook
+- **Code Mapping** shows how each decision maps to actual code
 
-So: **BMAD defined *what* to build and *why*; this code is the *how* for the demo.** When you change prompts, add UI, or tweak the flow, you’re iterating on the same scope (output quality, single-request flow) that BMAD locked in for the demo.
+**Review these artifacts** to understand:
+- Why we chose a minimal web app instead of full architecture
+- Why there's no auth, database, or persistence
+- Why the output format is sections + summary + key concepts
+- What trade-offs were made and why they're acceptable for a demo
 
-If this repo lives inside a larger Dev repo, BMAD artifacts live in **`_bmad-output/planning-artifacts/`** (e.g. `prd.md`, `demo-technical-approach.md`). If you only have this `demo/` folder, the table above is the bridge from “BMAD spec” to “this code.”
+This makes the work **reviewable, reusable, and scalable**—you can see the thinking behind the code, not just the code itself.
 
 ---
 
