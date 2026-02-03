@@ -22,11 +22,12 @@ See **[`bmad-output/README.md`](./bmad-output/README.md)** for an overview of th
 
 ### Quick Reference (Root Level)
 
-Concise summaries for quick reference:
+Concise summaries and architecture:
 
 - **[PRODUCT_BRIEF.md](./PRODUCT_BRIEF.md)** — Problem, user, goal, success criteria
 - **[PRD.md](./PRD.md)** — Scope, success criteria, constraints, and non-goals
 - **[TECHNICAL_APPROACH.md](./TECHNICAL_APPROACH.md)** — Architecture decisions and trade-offs
+- **[architecture.md](./architecture.md)** — System architecture: components, data flow, stack, repo structure
 - **[CODE_MAPPING.md](./CODE_MAPPING.md)** — How code implements the decisions above
 
 ### Why These Matter

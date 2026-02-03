@@ -16,11 +16,12 @@ BMAD makes product thinking and decisions **explicit and reviewable**. It's not 
 
 ### Root-Level Summaries
 
-For quick reference, concise versions are also available in the repo root:
+For quick reference, concise versions and architecture are available in the repo root:
 
 - **[PRODUCT_BRIEF.md](../PRODUCT_BRIEF.md)** — Concise problem, user, goal
 - **[PRD.md](../PRD.md)** — Demo scope, success criteria, constraints
 - **[TECHNICAL_APPROACH.md](../TECHNICAL_APPROACH.md)** — Architecture decisions and trade-offs
+- **[architecture.md](../architecture.md)** — System architecture: components, data flow, stack, repo structure
 - **[CODE_MAPPING.md](../CODE_MAPPING.md)** — How code implements the decisions
 
 ## Why These Matter
